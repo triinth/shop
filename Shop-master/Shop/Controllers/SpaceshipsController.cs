@@ -1,20 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Shop.Core.Dto;
 using Shop.Core.ServiceInterface;
-using Shop.Data;
 using Shop.Models.Spaceship;
+using Shop.Data;
 
 namespace Shop.Controllers
 {
     public class SpaceshipsController : Controller
     {
-
         private readonly ShopContext _context;
         private readonly ISpaceshipsServices _spaceshipsServices;
 
         public SpaceshipsController
             (
-                ShopContext context,
+               ShopContext context,
                 ISpaceshipsServices spaceshipsServices
             )
         {
@@ -26,17 +25,18 @@ namespace Shop.Controllers
         {
             var result = _context.Spaceships
                 .OrderByDescending(y => y.CreatedAt)
-                .Select(x=>new SpaceshipIndexViewModel
+                .Select(x => new SpaceshipIndexViewModel
                 {
-                    Id= x.Id,
+                    Id = x.Id,
                     Name = x.Name,
                     Type = x.Type,
                     Passengers = x.Passengers,
-                    EnginePower = x.EnginePower,
+                    EnginePower = x.EnginePower
                 });
-            
+
             return View(result);
         }
+
         [HttpGet]
         public IActionResult Add()
         {
@@ -127,8 +127,9 @@ namespace Shop.Controllers
                 CreatedAt = vm.CreatedAt,
                 ModifiedAt = vm.ModifiedAt
             };
+
             var result = await _spaceshipsServices.Update(dto);
-            
+
             if (result == null)
             {
                 return RedirectToAction(nameof(Index));
@@ -137,18 +138,6 @@ namespace Shop.Controllers
             return RedirectToAction(nameof(Index), vm);
         }
 
-        [HttpPost]
-
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            var spaceshipId = await _spaceshipsServices.Delete(id);
-            if (spaceshipId == null)
-            {
-                return RedirectToAction(nameof(Index));
-            }
-
-            return RedirectToAction(nameof(Index));
-        }
         [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
@@ -180,5 +169,42 @@ namespace Shop.Controllers
             return View(vm);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var spaceship = await _spaceshipsServices.GetAsync(id);
+
+            if (spaceship == null)
+            {
+                return NotFound();
+            }
+
+            var vm = new SpaceshipDeleteViewModel()
+            {
+                Id = spaceship.Id,
+                Name = spaceship.Name,
+                Type = spaceship.Type,
+                Crew = spaceship.Crew,
+                Passengers = spaceship.Passengers,
+                CargoWeight = spaceship.CargoWeight,
+                FullTripsCount = spaceship.FullTripsCount,
+                MaintenanceCount = spaceship.MaintenanceCount,
+                LastMaintenance = spaceship.LastMaintenance,
+                EnginePower = spaceship.EnginePower,
+                MaidenLaunch = spaceship.MaidenLaunch,
+                BuiltDate = spaceship.BuiltDate,
+                CreatedAt = spaceship.CreatedAt,
+                ModifiedAt = spaceship.ModifiedAt
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteConfirmation(Guid id)
+        {
+            var spaceshipId = await _spaceshipsServices.Delete(id);
+            return RedirectToAction(nameof(Index));
+        }
     }
 }
